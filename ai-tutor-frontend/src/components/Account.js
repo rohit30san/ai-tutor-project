@@ -10,7 +10,7 @@ const Account = () => {
     const token = localStorage.getItem("token");
     if (!token) return navigate("/login");
 
-    fetch("http://localhost:5000/api/account", {
+    fetch("https://ai-tutor-project.onrender.com/api/account", {
       headers: {
         Authorization: `Bearer ${token}`,
       },

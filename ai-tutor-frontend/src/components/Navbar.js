@@ -12,7 +12,7 @@ const Navbar = () => {
       if (!token) return;
 
       try {
-        const res = await fetch("http://localhost:5000/api/account", {
+        const res = await fetch("https://ai-tutor-project.onrender.com/api/account", {
           headers: {
             Authorization: `Bearer ${token}`,
           },
