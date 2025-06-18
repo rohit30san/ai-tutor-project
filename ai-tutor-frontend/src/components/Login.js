@@ -22,7 +22,11 @@ const Login = () => {
       localStorage.setItem('token', res.data.token);
       localStorage.setItem('user', JSON.stringify(res.data.user));
 
-      navigate('/chat');
+      // ✅ Trigger navbar update
+      window.dispatchEvent(new Event('storage'));
+
+      // ✅ Redirect to dashboard
+      navigate('/dashboard');
     } catch (err) {
       setError(err.response?.data?.message || 'Login failed');
     }

@@ -7,6 +7,8 @@ import Register from './components/Register';
 import Home from './pages/Home';
 import Chat from './pages/Chat';
 import Account from "./components/Account";
+import Dashboard from './pages/Dashboard';
+import Quiz from './pages/Quiz';
 
 function App() {
   return (
@@ -19,6 +21,8 @@ function App() {
           <Route path="/login" element={<Login />} />
           <Route path="/chat" element={<Chat />} />
 	  <Route path="/account" element={<Account />} />
+	  <Route path="/dashboard" element={<Dashboard />} />
+	  <Route path="/quiz" element={<Quiz />} />
         </Routes>
       </div>
       <Footer />

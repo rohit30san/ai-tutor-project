@@ -10,6 +10,14 @@ app.use(cors());
 app.use(express.json());
 app.use("/api/chat", require("./routes/chat"));
 app.use("/api/account", require("./routes/account"));
+const chatRoutes = require('./routes/chat');
+app.use('/api/chat', chatRoutes);
+
+const quizRoutes = require('./routes/quiz');
+app.use('/api/quiz', quizRoutes);
+const sessionRoutes = require('./routes/session');
+app.use('/api/session', sessionRoutes);
+
 
 
 // Routes

@@ -16,8 +16,8 @@ if (config.use_env_variable) {
   sequelize = new Sequelize(config.database, config.username, config.password, config);
 }
 
-fs
-  .readdirSync(__dirname)
+// Load all models
+fs.readdirSync(__dirname)
   .filter(file => {
     return (
       file.indexOf('.') !== 0 &&
@@ -31,11 +31,27 @@ fs
     db[model.name] = model;
   });
 
+// Define associations
 Object.keys(db).forEach(modelName => {
   if (db[modelName].associate) {
     db[modelName].associate(db);
   }
 });
+
+// ChatMessage → User
+if (db.ChatMessage && db.User) {
+  db.ChatMessage.belongsTo(db.User, { foreignKey: 'userId' });
+}
+
+// QuizResult → User
+if (db.QuizResult && db.User) {
+  db.QuizResult.belongsTo(db.User, { foreignKey: 'userId' });
+}
+
+if (db.ChatSessionSummary && db.User) {
+  db.ChatSessionSummary.belongsTo(db.User, { foreignKey: 'userId' });
+}
+
 
 db.sequelize = sequelize;
 db.Sequelize = Sequelize;
