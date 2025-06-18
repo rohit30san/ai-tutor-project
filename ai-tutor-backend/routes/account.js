@@ -1,7 +1,7 @@
 const express = require("express");
 const router = express.Router();
 const { User } = require("../models");
-const authenticate = require("../middleware/authenticate"); // JWT middleware
+const authenticate = require("../middleware/auth"); // JWT middleware
 
 // GET /api/account - return user details
 router.get("/", authenticate, async (req, res) => {
