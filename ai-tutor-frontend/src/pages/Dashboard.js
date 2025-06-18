@@ -11,16 +11,15 @@ const Dashboard = () => {
 
   useEffect(() => {
     const fetchSummaries = async () => {
-      const token = localStorage.getItem("token");
       try {
+        const token = localStorage.getItem("token");
         const res = await fetch("https://ai-tutor-project.onrender.com/api/session/history", {
           headers: { Authorization: `Bearer ${token}` }
         });
         const data = await res.json();
-        console.log("Summaries data:", data);
         setSummaries(Array.isArray(data) ? data : []);
       } catch (error) {
-        console.error("Failed to fetch session summaries", error);
+        console.error("Failed to fetch session summaries:", error);
         setSummaries([]);
       }
     };
@@ -43,11 +42,9 @@ const Dashboard = () => {
           headers: { Authorization: `Bearer ${token}` },
         });
         const data = await res.json();
-        console.log("Topics data:", data);
-        // Adjust this if API returns object with array inside, e.g. data.topics
         setTopics(Array.isArray(data) ? data : []);
       } catch (err) {
-        console.error('Failed to fetch recent topics', err);
+        console.error('Failed to fetch recent topics:', err);
         setTopics([]);
       }
     };
@@ -58,10 +55,9 @@ const Dashboard = () => {
           headers: { Authorization: `Bearer ${token}` },
         });
         const data = await res.json();
-        console.log("Quiz history data:", data);
         setQuizHistory(Array.isArray(data) ? data : []);
       } catch (err) {
-        console.error("Failed to fetch quiz history", err);
+        console.error("Failed to fetch quiz history:", err);
         setQuizHistory([]);
       }
     };
