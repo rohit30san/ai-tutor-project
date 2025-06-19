@@ -1,38 +1,63 @@
+/* App.css */
+:root {
+  --bg: #f7f8fc;
+  --text: #1c1c1c;
+  --card: #ffffff;
+  --primary: #007bff;
+  --primary-hover: #0056b3;
+}
+
+body.dark {
+  --bg: #0f0f0f;
+  --text: #f0f0f0;
+  --card: #1a1a1a;
+  --primary: #3399ff;
+  --primary-hover: #0077cc;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  background-color: var(--bg);
+  color: var(--text);
+  font-family: 'Segoe UI', sans-serif;
+  transition: background-color 0.3s ease, color 0.3s ease;
+  min-height: 100vh;
+}
+
+/* Utility wrapper class if needed */
 .App {
-  text-align: center;
-}
-
-.App-logo {
-  height: 40vmin;
-  pointer-events: none;
-}
-
-@media (prefers-reduced-motion: no-preference) {
-  .App-logo {
-    animation: App-logo-spin infinite 20s linear;
-  }
-}
-
-.App-header {
-  background-color: #282c34;
   min-height: 100vh;
   display: flex;
   flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  font-size: calc(10px + 2vmin);
+}
+
+/* Reuse for consistent buttons */
+button,
+.btn {
+  font-family: inherit;
+  font-weight: 600;
+  background-color: var(--primary);
   color: white;
+  padding: 0.6rem 1.2rem;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
 }
 
-.App-link {
-  color: #61dafb;
+button:hover,
+.btn:hover {
+  background-color: var(--primary-hover);
 }
 
-@keyframes App-logo-spin {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
+.btn-outline {
+  background-color: transparent;
+  border: 2px solid var(--primary);
+  color: var(--primary);
+}
+
+.btn-outline:hover {
+  background-color: var(--primary-hover);
+  color: white;
 }

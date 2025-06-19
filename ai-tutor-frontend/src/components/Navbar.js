@@ -34,7 +34,6 @@ const Navbar = () => {
       }
     };
 
-    // Listen to login/logout events
     window.addEventListener("storage", verifyUser);
     verifyUser();
 
@@ -53,12 +52,22 @@ const Navbar = () => {
       <div className="nav-logo">TutorAI</div>
       <div className="nav-links">
         <Link to="/">Home</Link>
-        <Link to="/chat">Chat</Link>
+        {isAuthenticated && <Link to="/chat">Chat</Link>}
         {isAuthenticated ? (
           <>
             <Link to="/dashboard">Dashboard</Link>
             <Link to="/account">Account</Link>
-            <button onClick={handleLogout} style={{ marginLeft: "1rem", cursor: "pointer", background: "none", border: "none", fontWeight: "500", color: "#dc3545" }}>
+            <button
+              onClick={handleLogout}
+              style={{
+                marginLeft: "1rem",
+                cursor: "pointer",
+                background: "none",
+                border: "none",
+                fontWeight: "500",
+                color: "#dc3545",
+              }}
+            >
               Logout
             </button>
           </>

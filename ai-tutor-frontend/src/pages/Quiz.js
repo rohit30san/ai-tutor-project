@@ -8,11 +8,10 @@ const Quiz = () => {
   const [questions, setQuestions] = useState([]);
   const [current, setCurrent] = useState(0);
   const [selected, setSelected] = useState('');
-  const [userAnswers, setUserAnswers] = useState([]); // NEW
   const [score, setScore] = useState(0);
   const [finished, setFinished] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [explanation, setExplanation] = useState(''); // NEW
+  const [explanation, setExplanation] = useState('');
 
   const subject = new URLSearchParams(location.search).get("subject") || "General";
 
@@ -36,11 +35,6 @@ const Quiz = () => {
     const isCorrect = selected === questions[current].answer;
     const newScore = isCorrect ? score + 1 : score;
 
-    setUserAnswers([
-      ...userAnswers,
-      { ...questions[current], userSelected: selected } // NEW
-    ]);
-
     if (current + 1 < questions.length) {
       setScore(newScore);
       setCurrent(current + 1);
@@ -52,6 +46,8 @@ const Quiz = () => {
 
       try {
         const token = localStorage.getItem("token");
+
+        // Save quiz score
         await fetch("https://ai-tutor-project.onrender.com/api/quiz/submit", {
           method: "POST",
           headers: {
@@ -64,31 +60,25 @@ const Quiz = () => {
             totalQuestions: questions.length,
           }),
         });
+
+        // Fetch explanation
+        const res = await fetch("https://ai-tutor-project.onrender.com/api/quiz/explain", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`
+          },
+          body: JSON.stringify({ questions })
+        });
+
+        const data = await res.json();
+        setExplanation(data.explanation || '');
+
       } catch (err) {
-        console.error("Quiz result not saved:", err);
+        console.error("Quiz result not saved or explanation failed:", err);
       }
 
       setLoading(false);
-    }
-  };
-
-  const handleExplain = async () => {
-    try {
-      const token = localStorage.getItem("token");
-      const res = await fetch("https://ai-tutor-project.onrender.com/api/quiz/explain", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`
-        },
-        body: JSON.stringify({ questions: userAnswers })
-      });
-
-      const data = await res.json();
-      setExplanation(data.explanation || "No explanation received.");
-    } catch (err) {
-      console.error("Explanation fetch failed:", err);
-      alert("Failed to fetch explanation.");
     }
   };
 
@@ -98,7 +88,7 @@ const Quiz = () => {
         <>
           <h2>{subject} Quiz</h2>
           {questions.length > 0 && (
-            <>
+            <div key={current} className="quiz-fade">
               <p><strong>Q{current + 1}:</strong> {questions[current].question}</p>
               <ul className="quiz-options">
                 {questions[current].options.map((opt, i) => (
@@ -119,46 +109,34 @@ const Quiz = () => {
               <button disabled={!selected} onClick={handleSubmit}>
                 {current === questions.length - 1 ? 'Finish Quiz' : 'Next'}
               </button>
-            </>
+            </div>
           )}
         </>
       ) : (
-        <div className="quiz-result">
+        <div className="quiz-result quiz-fade">
           <h2>Quiz Completed!</h2>
           <p>Your Score: {score} / {questions.length}</p>
-          {loading && <p>Saving your score...</p>}
-
-          <h3>Review Answers:</h3>
-          <ul>
-            {userAnswers.map((q, idx) => (
-              <li key={idx} style={{ marginBottom: "10px" }}>
-                <strong>Q{idx + 1}:</strong> {q.question}<br />
-                ✅ Correct: <strong>{q.answer}</strong><br />
-                {q.userSelected === q.answer ? (
-                  <span style={{ color: "green" }}>You chose correctly</span>
-                ) : (
-                  <span style={{ color: "red" }}>
-                    You selected: <strong>{q.userSelected || "None"}</strong>
-                  </span>
-                )}
-              </li>
-            ))}
-          </ul>
-
-          <button onClick={handleExplain} style={{ marginTop: '1rem' }}>
-            Explain this quiz
-          </button>
-
-          {explanation && (
-            <div style={{ marginTop: "1rem", background: "#f5f5f5", padding: "1rem", borderRadius: "8px" }}>
-              <h4>🧠 Explanation:</h4>
-              <p style={{ whiteSpace: "pre-wrap" }}>{explanation}</p>
-            </div>
+          {loading ? (
+            <p>Saving your score and fetching explanation...</p>
+          ) : (
+            <>
+              <ul>
+                {questions.map((q, i) => (
+                  <li key={i}>
+                    <strong>Q{i + 1}:</strong> {q.question}<br />
+                    <strong>Answer:</strong> {q.answer}
+                  </li>
+                ))}
+              </ul>
+              {explanation && (
+                <div className="explanation-box">
+                  <h4>Explanation:</h4>
+                  <p>{explanation}</p>
+                </div>
+              )}
+              <button onClick={() => navigate('/dashboard')}>Back to Dashboard</button>
+            </>
           )}
-
-          <button onClick={() => navigate('/dashboard')} style={{ marginTop: "1rem" }}>
-            Back to Dashboard
-          </button>
         </div>
       )}
     </div>

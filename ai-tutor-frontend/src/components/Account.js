@@ -11,40 +11,40 @@ const Account = () => {
     if (!token) return navigate("/login");
 
     fetch("https://ai-tutor-project.onrender.com/api/account", {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
+      headers: { Authorization: `Bearer ${token}` },
     })
-      .then(res => res.json())
-      .then(data => {
+      .then((res) => res.json())
+      .then((data) => {
         if (data.error) throw new Error(data.error);
         setUser(data);
       })
-      .catch(err => {
-        console.error(err);
+      .catch((err) => {
+        console.error("Account fetch failed:", err.message);
         navigate("/login");
       });
-  }, []);
+  }, [navigate]);
 
   const handleLogout = () => {
     localStorage.removeItem("token");
     navigate("/login");
   };
 
-  if (!user) return <p>Loading...</p>;
+  if (!user) {
+    return (
+      <div className="account-wrapper">
+        <div className="account-card loading">Loading your account...</div>
+      </div>
+    );
+  }
 
   return (
-    <div className="p-4 max-w-md mx-auto bg-white shadow rounded-xl mt-10">
-      <h2 className="text-xl font-bold mb-4">Account Details</h2>
-      <p><strong>Name:</strong> {user.name}</p>
-      <p><strong>Email:</strong> {user.email}</p>
-      <button
-  	className="logout-btn"
-  	onClick={() => {
-    	localStorage.removeItem("token");
-    	window.location.href = "/login";}}>
-  	Logout
-      </button>
+    <div className="account-wrapper">
+      <div className="account-card">
+        <h2 className="account-title">👤 Account Details</h2>
+        <p><strong>Name:</strong> {user.name}</p>
+        <p><strong>Email:</strong> {user.email}</p>
+        <button className="logout-btn" onClick={handleLogout}>Logout</button>
+      </div>
     </div>
   );
 };

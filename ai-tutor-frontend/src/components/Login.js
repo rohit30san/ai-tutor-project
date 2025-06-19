@@ -7,11 +7,13 @@ const Login = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
   const handleLogin = async (e) => {
     e.preventDefault();
     setError('');
+    setLoading(true);
 
     try {
       const res = await axios.post('https://ai-tutor-project.onrender.com/api/auth/login', {
@@ -22,21 +24,21 @@ const Login = () => {
       localStorage.setItem('token', res.data.token);
       localStorage.setItem('user', JSON.stringify(res.data.user));
 
-      // ✅ Trigger navbar update
+      // trigger navbar update
       window.dispatchEvent(new Event('storage'));
-
-      // ✅ Redirect to dashboard
       navigate('/dashboard');
     } catch (err) {
-      setError(err.response?.data?.message || 'Login failed');
+      setError(err.response?.data?.message || 'Login failed. Try again.');
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
-    <div className="login-wrapper">
-      <form className="login-form" onSubmit={handleLogin}>
-        <h2>Welcome Back</h2>
-        <p>Login to your TutorAI account</p>
+    <div className="auth-wrapper">
+      <form className="auth-form" onSubmit={handleLogin}>
+        <h2>Welcome Back 👋</h2>
+        <p className="subtitle">Login to your TutorAI account</p>
 
         <input
           type="email"
@@ -54,12 +56,14 @@ const Login = () => {
           onChange={(e) => setPassword(e.target.value)}
         />
 
-        <button type="submit">Login</button>
+        <button type="submit" disabled={loading}>
+          {loading ? 'Logging in...' : 'Login'}
+        </button>
 
-        {error && <p className="error">{error}</p>}
+        {error && <p className="form-error">{error}</p>}
 
-        <p className="login-link">
-          Don't have an account? <a href="/register">Register</a>
+        <p className="auth-link">
+          Don’t have an account? <a href="/register">Register</a>
         </p>
       </form>
     </div>
