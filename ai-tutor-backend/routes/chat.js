@@ -34,7 +34,7 @@ router.post("/", authenticate, async (req, res) => {
       content: msg.content
     }));
 
-    // Determine system prompt based on personality
+    // System prompt based on personality
     let systemPrompt = "You are a helpful AI tutor.";
     if (personality === 'strict') {
       systemPrompt = "You are a strict tutor. Be formal and direct when correcting mistakes.";
@@ -98,6 +98,29 @@ router.get("/history", authenticate, async (req, res) => {
     res.json(recentSubjects);
   } catch (err) {
     res.status(500).json({ error: "Failed to fetch history" });
+  }
+});
+
+// ✅ NEW: Get last 5 messages for given subject
+router.get("/context", authenticate, async (req, res) => {
+  const subject = req.query.subject || 'General';
+
+  try {
+    const messages = await ChatMessage.findAll({
+      where: { userId: req.user.id, subject },
+      order: [['createdAt', 'ASC']],
+      limit: 5
+    });
+
+    const formatted = messages.map(msg => ({
+      sender: msg.role === 'ai' ? 'received' : 'sent',
+      text: msg.content
+    }));
+
+    res.json(formatted);
+  } catch (err) {
+    console.error("Failed to load chat context:", err.message);
+    res.status(500).json({ error: "Failed to load chat history" });
   }
 });
 

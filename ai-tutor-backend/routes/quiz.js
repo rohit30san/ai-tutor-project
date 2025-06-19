@@ -10,12 +10,19 @@ const OPENROUTER_API_KEY = process.env.OPENROUTER_API_KEY;
 router.get("/", authenticate, async (req, res) => {
   const subject = req.query.subject || "General Knowledge";
 
-  const prompt = `Generate 3 multiple choice questions on the topic "${subject}".
-Each question should have:
-- a "question"
-- 4 "options"
-- and the correct "answer"
-Format the entire response as a JSON array.`;
+  const prompt = `You are an AI that generates only JSON.
+
+Generate 3 multiple choice questions about "${subject}" in this exact format:
+[
+  {
+    "question": "What is the capital of France?",
+    "options": ["Berlin", "London", "Paris", "Rome"],
+    "answer": "Paris"
+  },
+  ...
+]
+
+No explanation. Only return the array.`;
 
   try {
     const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
@@ -37,7 +44,22 @@ Format the entire response as a JSON array.`;
 
     const data = await response.json();
     const aiReply = data.choices?.[0]?.message?.content;
-    const questions = JSON.parse(aiReply);
+
+    if (!aiReply) {
+      console.error("AI reply was undefined or empty");
+      return res.status(500).json({ error: "AI did not return quiz content." });
+    }
+
+    let questions;
+    try {
+      const jsonStart = aiReply.indexOf("[");
+      const jsonEnd = aiReply.lastIndexOf("]");
+      const jsonString = aiReply.slice(jsonStart, jsonEnd + 1);
+      questions = JSON.parse(jsonString);
+    } catch (parseErr) {
+      console.error("Failed to parse AI quiz reply:", aiReply);
+      return res.status(500).json({ error: "Invalid quiz format from AI", raw: aiReply });
+    }
 
     res.json({ questions });
   } catch (err) {
@@ -65,12 +87,12 @@ router.post("/submit", authenticate, async (req, res) => {
   }
 });
 
-// ✅ GET: Quiz history for dashboard/account
+// GET: Quiz history for dashboard/account
 router.get("/history", authenticate, async (req, res) => {
   try {
     const results = await QuizResult.findAll({
       where: { userId: req.user.id },
-      order: [['createdAt', 'DESC']],
+      order: [["createdAt", "DESC"]],
       limit: 10,
     });
 
@@ -81,7 +103,7 @@ router.get("/history", authenticate, async (req, res) => {
   }
 });
 
-// ✅ NEW: Explain quiz answers using AI
+// POST: Explain quiz answers
 router.post("/explain", authenticate, async (req, res) => {
   const { questions } = req.body;
 

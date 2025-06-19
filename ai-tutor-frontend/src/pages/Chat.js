@@ -2,9 +2,7 @@ import React, { useEffect, useState } from 'react';
 import '../styles/chat.css';
 
 const Chat = () => {
-  const [messages, setMessages] = useState([
-    { text: 'Hi, how can I help you today?', sender: 'received' }
-  ]);
+  const [messages, setMessages] = useState([]);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
   const [subject, setSubject] = useState('General');
@@ -14,13 +12,32 @@ const Chat = () => {
     const token = localStorage.getItem("token");
     if (!token) {
       window.location.href = "/login";
+      return;
     }
 
     const params = new URLSearchParams(window.location.search);
-    const subjectFromURL = params.get("subject");
-    if (subjectFromURL) {
-      setSubject(subjectFromURL);
-    }
+    const subjectFromURL = params.get("subject") || "General";
+    setSubject(subjectFromURL);
+
+    // 🧠 Fetch last 5 messages for this subject
+    const fetchContext = async () => {
+      try {
+        const res = await fetch(`https://ai-tutor-project.onrender.com/api/chat/context?subject=${subjectFromURL}`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        const data = await res.json();
+        if (Array.isArray(data)) {
+          setMessages(data);
+        } else {
+          setMessages([{ text: 'Hi, how can I help you today?', sender: 'received' }]);
+        }
+      } catch (err) {
+        console.error("Failed to load chat history:", err);
+        setMessages([{ text: 'Hi, how can I help you today?', sender: 'received' }]);
+      }
+    };
+
+    fetchContext();
   }, []);
 
   const handleSend = async () => {
