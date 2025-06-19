@@ -14,6 +14,10 @@ router.post("/", authenticate, async (req, res) => {
     const personality = req.body.personality || 'coach';
     const userId = req.user.id;
 
+    if (!userMessage) {
+      return res.status(400).json({ error: "Message is required" });
+    }
+
     // Save user message
     await ChatMessage.create({
       userId,
@@ -22,7 +26,7 @@ router.post("/", authenticate, async (req, res) => {
       subject,
     });
 
-    // Fetch recent 5 messages for same subject
+    // Fetch last 5 messages (same subject)
     const recentMessages = await ChatMessage.findAll({
       where: { userId, subject },
       order: [['createdAt', 'DESC']],
@@ -34,14 +38,14 @@ router.post("/", authenticate, async (req, res) => {
       content: msg.content
     }));
 
-    // System prompt based on personality
+    // ✅ Generate system prompt based on personality
     let systemPrompt = "You are a helpful AI tutor.";
     if (personality === 'strict') {
-      systemPrompt = "You are a strict tutor. Be formal and direct when correcting mistakes.";
+      systemPrompt = "You are a strict AI tutor. Be formal and direct while correcting mistakes.";
     } else if (personality === 'chill') {
-      systemPrompt = "You are a casual and friendly tutor. Explain things like a buddy.";
+      systemPrompt = "You are a chill, friendly AI tutor. Keep responses casual and supportive.";
     } else if (personality === 'coach') {
-      systemPrompt = "You are a supportive tutor helping the student learn clearly.";
+      systemPrompt = "You are a supportive AI tutor helping students understand topics clearly.";
     }
 
     const messages = [
@@ -50,12 +54,13 @@ router.post("/", authenticate, async (req, res) => {
       { role: "user", content: userMessage }
     ];
 
+    // ✅ Fetch reply from OpenRouter
     const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
       method: "POST",
       headers: {
         "Authorization": `Bearer ${OPENROUTER_API_KEY}`,
         "Content-Type": "application/json",
-        "HTTP-Referer": "http://localhost:3000",
+        "HTTP-Referer": "https://ai-tutor-project.netlify.app", // optional but preferred
         "X-Title": "AI Tutor App"
       },
       body: JSON.stringify({
@@ -65,11 +70,15 @@ router.post("/", authenticate, async (req, res) => {
     });
 
     const data = await response.json();
+
     const aiReply = data.choices?.[0]?.message?.content;
 
-    if (!aiReply) return res.status(500).json({ error: "No AI reply", raw: data });
+    if (!aiReply) {
+      console.error("Invalid AI response:", JSON.stringify(data));
+      return res.status(500).json({ error: "AI did not return a response", raw: data });
+    }
 
-    // Save AI reply
+    // ✅ Save AI reply
     await ChatMessage.create({
       userId,
       role: 'ai',
@@ -78,7 +87,6 @@ router.post("/", authenticate, async (req, res) => {
     });
 
     res.json({ reply: aiReply });
-
   } catch (err) {
     console.error("Chat error:", err.message);
     res.status(500).json({ error: "Backend exception", message: err.message });
@@ -101,18 +109,18 @@ router.get("/history", authenticate, async (req, res) => {
   }
 });
 
-// ✅ NEW: Get last 5 messages for given subject
+// GET: Last 5 messages for context
 router.get("/context", authenticate, async (req, res) => {
   const subject = req.query.subject || 'General';
 
   try {
     const messages = await ChatMessage.findAll({
       where: { userId: req.user.id, subject },
-      order: [['createdAt', 'ASC']],
+      order: [['createdAt', 'DESC']],
       limit: 5
     });
 
-    const formatted = messages.map(msg => ({
+    const formatted = messages.reverse().map(msg => ({
       sender: msg.role === 'ai' ? 'received' : 'sent',
       text: msg.content
     }));
