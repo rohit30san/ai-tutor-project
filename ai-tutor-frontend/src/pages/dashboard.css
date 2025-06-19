@@ -98,8 +98,10 @@ body.dark-mode {
   background-color: #0056b3;
 }
 
+/* Recent Topics */
 .recent-topics,
-.quiz-history {
+.quiz-history,
+.session-summaries {
   margin-top: 2rem;
   background-color: var(--soft);
   padding: 1rem 1.5rem;
@@ -109,22 +111,32 @@ body.dark-mode {
 }
 
 .recent-topics h3,
-.quiz-history h3 {
+.quiz-history h3,
+.session-summaries h3 {
   margin-bottom: 0.5rem;
   font-weight: 600;
   color: var(--text);
 }
 
 .recent-topics ul,
-.quiz-history ul {
+.quiz-history ul,
+.session-summaries ul {
   padding-left: 1.5rem;
   list-style-type: disc;
   color: var(--muted);
 }
 
-.quiz-history li {
-  margin: 0.4rem 0;
+.quiz-history li,
+.session-summaries li {
+  margin: 0.5rem 0;
   font-size: 15px;
+  color: var(--text);
+}
+
+.session-summaries li p {
+  margin: 0.25rem 0 0;
+  font-size: 0.95rem;
+  color: var(--text);
 }
 
 @media screen and (max-width: 768px) {
@@ -134,5 +146,11 @@ body.dark-mode {
 
   .subject-box {
     flex: 1 1 100%;
+  }
+
+  .recent-topics,
+  .quiz-history,
+  .session-summaries {
+    padding: 1rem;
   }
 }

@@ -10,23 +10,6 @@ const Dashboard = () => {
   const [summaries, setSummaries] = useState([]);
 
   useEffect(() => {
-    const fetchSummaries = async () => {
-      try {
-        const token = localStorage.getItem("token");
-        const res = await fetch("https://ai-tutor-project.onrender.com/api/session/history", {
-          headers: { Authorization: `Bearer ${token}` }
-        });
-        const data = await res.json();
-        setSummaries(Array.isArray(data) ? data : []);
-      } catch (error) {
-        console.error("Failed to fetch session summaries:", error);
-        setSummaries([]);
-      }
-    };
-    fetchSummaries();
-  }, []);
-
-  useEffect(() => {
     const storedUser = JSON.parse(localStorage.getItem('user'));
     if (!storedUser) {
       navigate('/login');
@@ -62,8 +45,22 @@ const Dashboard = () => {
       }
     };
 
+    const fetchSummaries = async () => {
+      try {
+        const res = await fetch("https://ai-tutor-project.onrender.com/api/session/history", {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        const data = await res.json();
+        setSummaries(Array.isArray(data) ? data : []);
+      } catch (error) {
+        console.error("Failed to fetch session summaries:", error);
+        setSummaries([]);
+      }
+    };
+
     fetchTopics();
     fetchHistory();
+    fetchSummaries();
   }, [navigate]);
 
   const subjects = ['Math', 'Science', 'Coding', 'English'];
@@ -106,7 +103,7 @@ const Dashboard = () => {
         <section className="recent-topics">
           <h3>🕓 Recent Topics</h3>
           <ul>
-            {Array.isArray(topics) && topics.length > 0 ? (
+            {topics.length > 0 ? (
               topics.map((topic, idx) => <li key={idx}>{topic}</li>)
             ) : (
               <li>No recent topics yet.</li>
@@ -116,7 +113,7 @@ const Dashboard = () => {
 
         <section className="quiz-history">
           <h3>📝 Recent Quiz History</h3>
-          {Array.isArray(quizHistory) && quizHistory.length > 0 ? (
+          {quizHistory.length > 0 ? (
             <ul>
               {quizHistory.map((q, i) => (
                 <li key={i}>
@@ -132,7 +129,7 @@ const Dashboard = () => {
 
         <section className="session-summaries">
           <h3>🧠 Session Summaries</h3>
-          {Array.isArray(summaries) && summaries.length > 0 ? (
+          {summaries.length > 0 ? (
             <ul>
               {summaries.map((s, i) => (
                 <li key={i}>

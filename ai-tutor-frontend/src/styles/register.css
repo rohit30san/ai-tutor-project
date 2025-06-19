@@ -16,6 +16,7 @@
   max-width: 420px;
   width: 100%;
   text-align: center;
+  transition: all 0.3s ease-in-out;
 }
 
 .auth-form h2 {
@@ -44,6 +45,7 @@
 .auth-form input:focus {
   outline: none;
   border-color: #007bff;
+  box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.1);
 }
 
 .auth-form button {
@@ -56,7 +58,7 @@
   border: none;
   border-radius: 10px;
   cursor: pointer;
-  transition: background 0.2s ease;
+  transition: background-color 0.2s ease;
 }
 
 .auth-form button:hover {
@@ -87,4 +89,28 @@
 
 .auth-link a:hover {
   text-decoration: underline;
+}
+
+/* 📱 Mobile Optimizations */
+@media screen and (max-width: 480px) {
+  .auth-form {
+    padding: 2rem 1.5rem;
+    border-radius: 12px;
+  }
+
+  .auth-form h2 {
+    font-size: 1.6rem;
+  }
+
+  .auth-form input,
+  .auth-form button {
+    font-size: 0.95rem;
+    padding: 0.75rem 1rem;
+  }
+
+  .auth-link,
+  .form-error,
+  .form-success {
+    font-size: 0.85rem;
+  }
 }

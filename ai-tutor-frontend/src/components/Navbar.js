@@ -4,39 +4,31 @@ import "./Navbar.css";
 
 const Navbar = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(!!localStorage.getItem("token"));
+  const [menuOpen, setMenuOpen] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
-    const verifyUser = async () => {
-      const token = localStorage.getItem("token");
-      if (!token) {
-        setIsAuthenticated(false);
-        return;
-      }
+    const token = localStorage.getItem("token");
+    setIsAuthenticated(!!token);
 
+    const verifyUser = async () => {
+      if (!token) return;
       try {
         const res = await fetch("https://ai-tutor-project.onrender.com/api/account", {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
+          headers: { Authorization: `Bearer ${token}` }
         });
-
-        if (res.ok) {
-          setIsAuthenticated(true);
-        } else {
+        if (!res.ok) {
           setIsAuthenticated(false);
           localStorage.removeItem("token");
         }
-      } catch (err) {
-        console.error("Auth check failed", err);
+      } catch {
         setIsAuthenticated(false);
         localStorage.removeItem("token");
       }
     };
 
-    window.addEventListener("storage", verifyUser);
     verifyUser();
-
+    window.addEventListener("storage", verifyUser);
     return () => window.removeEventListener("storage", verifyUser);
   }, []);
 
@@ -49,32 +41,28 @@ const Navbar = () => {
 
   return (
     <nav className="navbar">
-      <div className="nav-logo">TutorAI</div>
-      <div className="nav-links">
-        <Link to="/">Home</Link>
-        {isAuthenticated && <Link to="/chat">Chat</Link>}
+      <div className="nav-header">
+        <Link to="/" className="nav-logo" onClick={() => setMenuOpen(false)}>
+          TutorAI
+        </Link>
+        <button className="hamburger" onClick={() => setMenuOpen(!menuOpen)}>
+          ☰
+        </button>
+      </div>
+
+      <div className={`nav-links ${menuOpen ? "open" : ""}`}>
+        <Link to="/" onClick={() => setMenuOpen(false)}>Home</Link>
+        {isAuthenticated && <Link to="/chat" onClick={() => setMenuOpen(false)}>Chat</Link>}
         {isAuthenticated ? (
           <>
-            <Link to="/dashboard">Dashboard</Link>
-            <Link to="/account">Account</Link>
-            <button
-              onClick={handleLogout}
-              style={{
-                marginLeft: "1rem",
-                cursor: "pointer",
-                background: "none",
-                border: "none",
-                fontWeight: "500",
-                color: "#dc3545",
-              }}
-            >
-              Logout
-            </button>
+            <Link to="/dashboard" onClick={() => setMenuOpen(false)}>Dashboard</Link>
+            <Link to="/account" onClick={() => setMenuOpen(false)}>Account</Link>
+            <button onClick={handleLogout}>Logout</button>
           </>
         ) : (
           <>
-            <Link to="/login">Login</Link>
-            <Link to="/register">Register</Link>
+            <Link to="/login" onClick={() => setMenuOpen(false)}>Login</Link>
+            <Link to="/register" onClick={() => setMenuOpen(false)}>Register</Link>
           </>
         )}
       </div>
