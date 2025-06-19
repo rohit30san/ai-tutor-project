@@ -27,7 +27,7 @@ const Chat = () => {
         });
         const data = await res.json();
         if (Array.isArray(data)) {
-          setMessages(data);
+          setMessages(data.slice(-5));
         } else {
           setMessages([{ text: 'Hi, how can I help you today?', sender: 'received' }]);
         }
@@ -60,8 +60,8 @@ const Chat = () => {
         },
         body: JSON.stringify({
           message: trimmed,
-          subject,
-          personality
+          subject: subject,
+          personality: personality
         }),
       });
 
