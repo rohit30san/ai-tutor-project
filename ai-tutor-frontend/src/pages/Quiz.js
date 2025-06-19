@@ -8,9 +8,11 @@ const Quiz = () => {
   const [questions, setQuestions] = useState([]);
   const [current, setCurrent] = useState(0);
   const [selected, setSelected] = useState('');
+  const [userAnswers, setUserAnswers] = useState([]); // NEW
   const [score, setScore] = useState(0);
   const [finished, setFinished] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [explanation, setExplanation] = useState(''); // NEW
 
   const subject = new URLSearchParams(location.search).get("subject") || "General";
 
@@ -33,6 +35,11 @@ const Quiz = () => {
   const handleSubmit = async () => {
     const isCorrect = selected === questions[current].answer;
     const newScore = isCorrect ? score + 1 : score;
+
+    setUserAnswers([
+      ...userAnswers,
+      { ...questions[current], userSelected: selected } // NEW
+    ]);
 
     if (current + 1 < questions.length) {
       setScore(newScore);
@@ -62,6 +69,26 @@ const Quiz = () => {
       }
 
       setLoading(false);
+    }
+  };
+
+  const handleExplain = async () => {
+    try {
+      const token = localStorage.getItem("token");
+      const res = await fetch("https://ai-tutor-project.onrender.com/api/quiz/explain", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify({ questions: userAnswers })
+      });
+
+      const data = await res.json();
+      setExplanation(data.explanation || "No explanation received.");
+    } catch (err) {
+      console.error("Explanation fetch failed:", err);
+      alert("Failed to fetch explanation.");
     }
   };
 
@@ -100,7 +127,38 @@ const Quiz = () => {
           <h2>Quiz Completed!</h2>
           <p>Your Score: {score} / {questions.length}</p>
           {loading && <p>Saving your score...</p>}
-          <button onClick={() => navigate('/dashboard')}>Back to Dashboard</button>
+
+          <h3>Review Answers:</h3>
+          <ul>
+            {userAnswers.map((q, idx) => (
+              <li key={idx} style={{ marginBottom: "10px" }}>
+                <strong>Q{idx + 1}:</strong> {q.question}<br />
+                ✅ Correct: <strong>{q.answer}</strong><br />
+                {q.userSelected === q.answer ? (
+                  <span style={{ color: "green" }}>You chose correctly</span>
+                ) : (
+                  <span style={{ color: "red" }}>
+                    You selected: <strong>{q.userSelected || "None"}</strong>
+                  </span>
+                )}
+              </li>
+            ))}
+          </ul>
+
+          <button onClick={handleExplain} style={{ marginTop: '1rem' }}>
+            Explain this quiz
+          </button>
+
+          {explanation && (
+            <div style={{ marginTop: "1rem", background: "#f5f5f5", padding: "1rem", borderRadius: "8px" }}>
+              <h4>🧠 Explanation:</h4>
+              <p style={{ whiteSpace: "pre-wrap" }}>{explanation}</p>
+            </div>
+          )}
+
+          <button onClick={() => navigate('/dashboard')} style={{ marginTop: "1rem" }}>
+            Back to Dashboard
+          </button>
         </div>
       )}
     </div>

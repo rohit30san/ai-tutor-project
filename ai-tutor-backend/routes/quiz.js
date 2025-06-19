@@ -81,4 +81,46 @@ router.get("/history", authenticate, async (req, res) => {
   }
 });
 
+// ✅ NEW: Explain quiz answers using AI
+router.post("/explain", authenticate, async (req, res) => {
+  const { questions } = req.body;
+
+  if (!questions || !Array.isArray(questions) || questions.length === 0) {
+    return res.status(400).json({ error: "No quiz data provided" });
+  }
+
+  const prompt = `Explain the correct answers for the following multiple choice questions:\n\n${JSON.stringify(questions, null, 2)}\n\nGive a clear explanation per question for a student to understand.`;
+
+  try {
+    const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+      method: "POST",
+      headers: {
+        "Authorization": `Bearer ${OPENROUTER_API_KEY}`,
+        "Content-Type": "application/json",
+        "HTTP-Referer": "http://localhost:3000",
+        "X-Title": "AI Tutor App"
+      },
+      body: JSON.stringify({
+        model: "mistralai/mistral-7b-instruct:free",
+        messages: [
+          { role: "system", content: "You are a helpful tutor explaining quiz answers." },
+          { role: "user", content: prompt }
+        ]
+      })
+    });
+
+    const data = await response.json();
+    const explanation = data.choices?.[0]?.message?.content;
+
+    if (!explanation) {
+      return res.status(500).json({ error: "AI did not return an explanation" });
+    }
+
+    res.json({ explanation });
+  } catch (err) {
+    console.error("Quiz explanation error:", err.message);
+    res.status(500).json({ error: "Failed to generate explanation" });
+  }
+});
+
 module.exports = router;

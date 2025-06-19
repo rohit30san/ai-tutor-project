@@ -8,6 +8,7 @@ const Chat = () => {
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
   const [subject, setSubject] = useState('General');
+  const [personality, setPersonality] = useState('coach');
 
   useEffect(() => {
     const token = localStorage.getItem("token");
@@ -42,7 +43,8 @@ const Chat = () => {
         },
         body: JSON.stringify({
           message: trimmed,
-          subject: subject,
+          subject,
+          personality
         }),
       });
 
@@ -78,6 +80,16 @@ const Chat = () => {
 
   return (
     <div className="chat-wrapper">
+      {/* Stylish Personality Dropdown */}
+      <div className="chat-mode-selector">
+        <label>Tutor Mode</label>
+        <select value={personality} onChange={(e) => setPersonality(e.target.value)}>
+          <option value="coach">🧠 Coach</option>
+          <option value="strict">👨‍🏫 Strict</option>
+          <option value="chill">😎 Chill</option>
+        </select>
+      </div>
+
       <div className="chat-messages">
         {messages.map((msg, idx) => (
           <div key={idx} className={`message ${msg.sender}`}>

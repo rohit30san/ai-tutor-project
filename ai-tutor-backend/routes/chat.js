@@ -1,8 +1,8 @@
 const express = require("express");
 const router = express.Router();
 const fetch = (...args) => import('node-fetch').then(({ default: fetch }) => fetch(...args));
-const { ChatMessage, User } = require("../models");
-const authenticate = require("../middleware/auth"); // your JWT middleware
+const { ChatMessage } = require("../models");
+const authenticate = require("../middleware/auth");
 
 const OPENROUTER_API_KEY = process.env.OPENROUTER_API_KEY;
 
@@ -11,6 +11,7 @@ router.post("/", authenticate, async (req, res) => {
   try {
     const userMessage = req.body.message;
     const subject = req.body.subject || 'General';
+    const personality = req.body.personality || 'coach';
     const userId = req.user.id;
 
     // Save user message
@@ -20,6 +21,34 @@ router.post("/", authenticate, async (req, res) => {
       content: userMessage,
       subject,
     });
+
+    // Fetch recent 5 messages for same subject
+    const recentMessages = await ChatMessage.findAll({
+      where: { userId, subject },
+      order: [['createdAt', 'DESC']],
+      limit: 5
+    });
+
+    const context = recentMessages.reverse().map(msg => ({
+      role: msg.role === 'ai' ? 'assistant' : 'user',
+      content: msg.content
+    }));
+
+    // Determine system prompt based on personality
+    let systemPrompt = "You are a helpful AI tutor.";
+    if (personality === 'strict') {
+      systemPrompt = "You are a strict tutor. Be formal and direct when correcting mistakes.";
+    } else if (personality === 'chill') {
+      systemPrompt = "You are a casual and friendly tutor. Explain things like a buddy.";
+    } else if (personality === 'coach') {
+      systemPrompt = "You are a supportive tutor helping the student learn clearly.";
+    }
+
+    const messages = [
+      { role: "system", content: systemPrompt },
+      ...context,
+      { role: "user", content: userMessage }
+    ];
 
     const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
       method: "POST",
@@ -31,10 +60,7 @@ router.post("/", authenticate, async (req, res) => {
       },
       body: JSON.stringify({
         model: "mistralai/mistral-7b-instruct:free",
-        messages: [
-          { role: "system", content: "You are a helpful AI tutor." },
-          { role: "user", content: userMessage }
-        ]
+        messages
       })
     });
 
@@ -43,7 +69,7 @@ router.post("/", authenticate, async (req, res) => {
 
     if (!aiReply) return res.status(500).json({ error: "No AI reply", raw: data });
 
-    // Save AI message
+    // Save AI reply
     await ChatMessage.create({
       userId,
       role: 'ai',
@@ -52,6 +78,7 @@ router.post("/", authenticate, async (req, res) => {
     });
 
     res.json({ reply: aiReply });
+
   } catch (err) {
     console.error("Chat error:", err.message);
     res.status(500).json({ error: "Backend exception", message: err.message });
